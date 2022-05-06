@@ -77,7 +77,12 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
                 button {
                     +"rm"
                     attrs.onClickFunction = {
-                        props.rmStudent(index)
+                        //failsafe:
+                        if (props.students.size == 1)
+                            window.alert("<Remove student>: " +
+                                    "unable to delete last student in the list.")
+                        else
+                            props.rmStudent(index)
                     }
                 }
             }
@@ -119,9 +124,9 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
         }
     )
 
-    val rmStudentMutation = useMutation<Any, Any, Any, Any>({ studentItem: Item<Student> ->
+    val rmStudentMutation = useMutation<Any, Any, Any, Any>({ s: Item<Student> ->
             axios<String>(jso {
-                url = "$studentsURL/${studentItem.uuid}"
+                url = "$studentsURL/${s.uuid}"
                 method = "Delete"
             })
         },

@@ -4,9 +4,9 @@ import react.Props
 import react.ReactElement
 import react.fc
 
-class ReactQueryDevToolsOption(val initialIsOpen: Boolean = true) // ???
+class ReactQueryDevToolsOption(val initialIsOpen: Boolean = true)
 
-interface QueryError{
+interface QueryError {
     val message: String
 }
 

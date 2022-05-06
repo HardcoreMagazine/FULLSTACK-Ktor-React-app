@@ -52,20 +52,4 @@ fun Route.student() = route(studentsPath) {
         studentsRepo.update(id, newStudent)
         call.respondText("Student successfully updated", status = HttpStatusCode.Created)
     }
-/*    post("byFirstname") {
-        val firstname = try {
-            call.receive<Student>().fullID
-        } catch (e: Throwable) {
-            return@post call.respondText("Request body is not Student", status = HttpStatusCode.BadRequest)
-        }
-        call.respond(studentsRepo.find { it.firstname == firstname })
-    }
-    post("byUUIDs") {
-        val uuids = try {
-            call.receive<List<String>>()
-        } catch (e: Throwable) {
-            return@post call.respondText("Request body is not uuid list", status = HttpStatusCode.BadRequest)
-        }
-        call.respond(uuids.map { studentsRepo[it] })
-    }*/
 }

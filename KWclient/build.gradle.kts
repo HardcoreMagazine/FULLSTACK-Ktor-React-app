@@ -31,6 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
     implementation(npm("cross-fetch", "3.1.5"))
     implementation(npm("axios", "0.24.0"))
+    //implementation(npm("react-query-devtools", "2.6.3")) //questionable
 }
 kotlin {
     js(LEGACY) {
@@ -43,6 +44,7 @@ kotlin {
     }
 }
 
+//copies newly generated JS into KW (root) folder
 tasks.register<Copy>("copyBuild") {
     from("/build/distributions/KWclient.js", "/build/distributions/KWclient.js.map")
     into("../src/main/resources/")

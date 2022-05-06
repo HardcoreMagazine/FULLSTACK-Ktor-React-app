@@ -19,7 +19,6 @@ import react.useRef
 import server.model.Config
 import server.model.Item
 import server.model.Teacher
-import wrappers.AxiosResponse
 import wrappers.QueryError
 import wrappers.axios
 import wrappers.fetchText
@@ -42,8 +41,10 @@ fun fcTeacherList() = fc("TeacherList") { p: TeacherListProps ->
     div {
         h4 { +"Add teacher: " }
         input { ref = firstnameRef; attrs.placeholder = "Firstname" }
+        //placeholder attribute creates pseudo-value/input tip for users
         input { ref = surnameRef; attrs.placeholder = "Surname" }
         input { ref = salaryRef; attrs.placeholder = "Salary (number)"; attrs.type = InputType.number }
+        //type attribute hard-locks field input type ("number" allows only numbers)
         input { ref = lastQualRef;attrs.placeholder = "Last re-qualification (year)"; attrs.type = InputType.number }
         input { ref = govNumberRef; attrs.placeholder = "Government number/ID" }
         button {
@@ -100,9 +101,6 @@ class ClientItemTeacher(
 fun fcContainerTeacherList() = fc("QueryTeacherList") { _: Props ->
     val queryClient = useQueryClient()
 
-/*    val queryTeachers = useQuery<Any, QueryError, AxiosResponse<Array<Item<Teacher>>>, Any>(
-        "teacherList", {
-        axios<Array<String>>(jso { url = Config.teachersURL }) })*/
     val queryTeachers = useQuery<String, QueryError, String, String>(
         "teachersList", { fetchText(Config.teachersURL) })
 

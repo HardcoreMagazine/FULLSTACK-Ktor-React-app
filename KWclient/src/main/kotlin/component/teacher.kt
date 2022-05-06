@@ -181,6 +181,12 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
     val teacherParams = useParams()
     val teacherId = teacherParams["id"] ?: "Route param error"
 
+    //TODO: fix teacher lessons query
+    // !!WARNING!!
+    // for unknown reasons teacher lessons query
+    // causes memory leak in JVM
+    // do not open [teachers/:id] page if
+    // you don't want your browser (&&PC) to freeze!
     val queryLessons = useQuery<String, QueryError, String, String>(
         "teacherLessonsList", { fetchText(Config.lessonsURL ) })
 

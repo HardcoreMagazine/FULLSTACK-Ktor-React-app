@@ -15,7 +15,6 @@ fun Route.teacher() = route(Config.teachersPath) {
         else call.respondText("No teachers found", status=HttpStatusCode.NotFound)
     }
     post {
-        //.receive -- get values from DATA (json string)
         val teacher = call.receive<Teacher>()
         teachersRepo.create(teacher)
         call.respondText("Successful teacher creation", status=HttpStatusCode.Created)

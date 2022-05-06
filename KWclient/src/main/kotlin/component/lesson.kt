@@ -5,11 +5,13 @@ import kotlinext.js.jso
 import kotlinx.browser.window
 import kotlinx.html.INPUT
 import kotlinx.html.SELECT
+import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.w3c.dom.events.Event
 import react.*
 import react.dom.*
 import react.query.useMutation
@@ -68,21 +70,29 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     val studentSelectAddRef = useRef<SELECT>()
     val studentSelectRmRef = useRef<SELECT>()
 
+    val (name, setName) = useState(lp.lesson.elem.name)
+    //type reference require separate/additional function (not included in current version)
+    val (hours, setHours) = useState(lp.lesson.elem.totalHours.toString())
+
+    fun changeOnEdit(setter: StateSetter<String>, ref: MutableRefObject<INPUT>) = { _: Event ->
+        setter(ref.current?.value ?: "ERROR!")
+    }
+
     div {
         h4 { +"Lesson editor: " }
         p {
             +"Name: "
             input {
                 ref = lessonNameRef
-                attrs.value = lp.lesson.elem.name
+                attrs.value = name
+                attrs.onChangeFunction = changeOnEdit(setName, lessonNameRef)
             }
         }
-        //lesson types are fixed
+        //lesson types are fixed/final
         p {
             +"Type: "
             select {
                 ref = lessonTypeRef
-                //lesson types are fixed!
                 listOf("Lecture", "Lab", "Practice")
                     .sortedBy { it != lp.lesson.elem.type }
                     //puts lesson-defined *Type* first on the list
@@ -98,22 +108,27 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
             +"Hours total (semester): "
             input {
                 ref = lessonHoursRef
-                attrs.value = lp.lesson.elem.totalHours.toString()
+                attrs.value = hours
+                attrs.onChangeFunction = changeOnEdit(setHours, lessonHoursRef)
             }
             button {
                 +"Update lesson"
                 attrs.onClickFunction = {
                     lessonNameRef.current?.value?.let { lessonName ->
-                        lessonTypeRef.current?.value?.let { lessonType ->
+                        val selType = lessonTypeRef.current.unsafeCast<SelectedElement>()
+                        //selection is never empty
+                        if (selType.value == "" || selType.value == " ")
+                            //gonna check value regardless...
+                            window.alert("<Update lesson>: 'Type' field must not be empty!")
+                        else
                             lessonHoursRef.current?.value?.let { lessonHours ->
                                 val lhToInt = lessonHours.toIntOrNull()
                                 if (lhToInt == null)
                                     window.alert("<Update lesson>: 'Hours total (semester)'" +
                                             "field must be a number!")
                                 else
-                                    lp.updateLesson(lessonName, lessonType, lhToInt)
+                                    lp.updateLesson(lessonName, selType.value, lhToInt)
                             }
-                        }
                     }
                 }
             }
@@ -137,9 +152,9 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
             button {
                 +"+"
                 attrs.onClickFunction = {
-                    val select = lessonAddTeacherRef.current.unsafeCast<SelectedElement>()
-                    if (select.value != "" && select.value != " ")
-                        lp.addTeacher(select.value)
+                    val selTeacher = lessonAddTeacherRef.current.unsafeCast<SelectedElement>()
+                    if (selTeacher.value != "" && selTeacher.value != " ")
+                        lp.addTeacher(selTeacher.value)
                     else
                         window.alert("<Add teacher to lesson>: Empty values are not allowed.")
                 }
@@ -161,9 +176,9 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
             button {
                 +"rm"
                 attrs.onClickFunction = {
-                    val select = lessonRmTeacherRef.current.unsafeCast<SelectedElement>()
-                    if (select.value != "" && select.value != " ")
-                        lp.rmTeacher(select.value)
+                    val selTeacher = lessonRmTeacherRef.current.unsafeCast<SelectedElement>()
+                    if (selTeacher.value != "" && selTeacher.value != " ")
+                        lp.rmTeacher(selTeacher.value)
                     else
                         window.alert("<Remove teacher from lesson>: Empty values are not allowed.")
                 }
@@ -187,9 +202,9 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
             button {
                 +"+"
                 attrs.onClickFunction = {
-                    val select = studentSelectAddRef.current.unsafeCast<SelectedElement>()
-                    if (select.value != "" && select.value != " ")
-                        lp.addStudent(select.value)
+                    val selStudent = studentSelectAddRef.current.unsafeCast<SelectedElement>()
+                    if (selStudent.value != "" && selStudent.value != " ")
+                        lp.addStudent(selStudent.value)
                     else
                         window.alert("<Add student to lesson>: Empty values are not allowed.")
                 }
@@ -213,9 +228,9 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
             button {
                 +"rm"
                 attrs.onClickFunction = {
-                    val select = studentSelectRmRef.current.unsafeCast<SelectedElement>()
-                    if (select.value != "" && select.value != " ")
-                        lp.rmStudent(select.value)
+                    val selStudent = studentSelectRmRef.current.unsafeCast<SelectedElement>()
+                    if (selStudent.value != "" && selStudent.value != " ")
+                        lp.rmStudent(selStudent.value)
                     else
                         window.alert("<Remove student from lesson>: Empty values are not allowed.")
                 }
@@ -233,6 +248,11 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     }
 }
 
+private class LessonStates(
+    val oldLesson: Item<Lesson>,
+    val newLesson: Lesson
+)
+
 fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
     val queryClient = useQueryClient()
     val lessonParams = useParams()
@@ -245,13 +265,13 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
     val queryTeachers = useQuery<String, QueryError, String, String>(
         "teachersList", { fetchText(Config.teachersURL) })
 
-    val updateLessonMutation = useMutation<Any, Any, Triple<String, String, Int>, Any>({ elem ->
+    val updateLessonMutation = useMutation<Any, Any, LessonStates, Any>({ elem ->
         //<name, type, hours>
         axios<String>(jso {
-            url = "${Config.lessonsURL}/$lessonId"
+            url = "${Config.lessonsURL}/${elem.oldLesson.uuid}"
             method = "Put"
             headers = json("Content-Type" to "application/json")
-            data = Json.encodeToString(Lesson(elem.first, elem.second, elem.third))
+            data = Json.encodeToString(elem.newLesson)
         })
     },
         options = jso {
@@ -330,11 +350,21 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
             attrs.lesson = lessonItem
             attrs.students = studentItems
             attrs.teachers = teacherItems
-            attrs.updateLesson = { n, t, h -> updateLessonMutation.mutate(Triple(n, t, h), null) }
-            attrs.addTeacher = { addTeacherMutation.mutate(it, null) }
-            attrs.rmTeacher = { rmTeacherMutation.mutate(it, null) }
-            attrs.addStudent = { addStudentMutation.mutate(it, null) }
-            attrs.rmStudent = { rmStudentMutation.mutate(it, null) }
+            attrs.updateLesson = { n, t, h ->
+                updateLessonMutation.mutate(LessonStates(lessonItem, Lesson(n, t, h)), null)
+            }
+            attrs.addTeacher = {
+                addTeacherMutation.mutate(it, null)
+            }
+            attrs.rmTeacher = {
+                rmTeacherMutation.mutate(it, null)
+            }
+            attrs.addStudent = {
+                addStudentMutation.mutate(it, null)
+            }
+            attrs.rmStudent = {
+                rmStudentMutation.mutate(it, null)
+            }
         }
     }
 }

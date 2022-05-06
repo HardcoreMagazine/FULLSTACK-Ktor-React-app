@@ -102,9 +102,6 @@ fun fcStudent() = fc("Student") { props: StudentProps ->
     }
 }
 
-
-
-
 private class StudentStates(
     val oldStudent: Item<Student>,
     val newStudent: Student
@@ -122,12 +119,12 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
     val queryLessons = useQuery<String, QueryError, String, String>(
         "lessonList", { fetchText(Config.lessonsURL) })
 
-    val updateStudentMutation = useMutation<Any, Any, StudentStates, Any>({ mutationData ->
+    val updateStudentMutation = useMutation<Any, Any, StudentStates, Any>({ elem ->
             axios<String>(jso {
-                url = "${Config.studentsURL}/${mutationData.oldStudent.uuid}"
+                url = "${Config.studentsURL}/${elem.oldStudent.uuid}"
                 method = "Put"
                 headers = json("Content-Type" to "application/json",)
-                data = JSON.stringify(mutationData.newStudent)
+                data = JSON.stringify(elem.newStudent)
             })
         },
         options = jso {

@@ -37,12 +37,10 @@ fun fcLessonDetails() = fc("LessonDetails") { p: LessonDetailsProps ->
                     .map { it.second }
                     .toSet()
                     .map { gn ->
-                    //li {
                         a {
                             +"Group '$gn':"
                             attrs.href = "http://localhost:8000/#/groups/$gn"
                         }
-                    //}
                     p.students.map { s ->
                         if (s.second == gn)
                             li {

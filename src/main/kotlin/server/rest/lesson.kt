@@ -34,16 +34,23 @@ fun Route.lesson() {
         }
         put("{id}") {
             val id = call.parameters["id"]?:return@put call
-                .respondText("Bad lesson id", status=HttpStatusCode.BadRequest)
+                .respondText("Invalid lesson id", status=HttpStatusCode.BadRequest)
             val lessonItem = lessonsRepo[id]?:return@put call
                 .respondText("No lessons found with id $id", status=HttpStatusCode.NotFound)
-            val lessonData = call.receive<Lesson>()
+            val newLessonData = call.receive<Lesson>()
             val newLesson = lessonItem.elem.copy(
-                name=lessonData.name, type=lessonData.type, totalHours=lessonData.totalHours)
+                name=newLessonData.name, type=newLessonData.type, totalHours=newLessonData.totalHours)
             lessonsRepo.update(lessonItem.uuid, newLesson)
             call.respondText("Lesson updated successfully", status=HttpStatusCode.Created)
         }
-
+        delete("{id}") {
+            val id = call.parameters["id"] ?: return@delete call
+                .respondText("Invalid lesson id", status = HttpStatusCode.BadRequest)
+            if (lessonsRepo.delete(id))
+                call.respondText("Lesson removed successfully", status = HttpStatusCode.Accepted)
+            else
+                call.respondText("No lessons found with id $id", status = HttpStatusCode.NotFound)
+        }
     }
     //router for lesson, lessonDetails
     route("$lessonsPath{lessonId}/details/{subjectId}") {

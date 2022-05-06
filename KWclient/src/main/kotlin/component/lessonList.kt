@@ -3,6 +3,7 @@ package component
 import kotlinext.js.jso
 import kotlinx.browser.window
 import kotlinx.html.INPUT
+import kotlinx.html.InputType
 import kotlinx.html.SELECT
 import kotlinx.html.js.onClickFunction
 import kotlinx.serialization.decodeFromString
@@ -27,6 +28,7 @@ import kotlin.js.json
 external interface LessonListProps : Props {
     var lessons: List<Item<Lesson>>
     var addLesson: (String, String, Int) -> Unit
+    var rmLesson: (Int) -> Unit
 }
 
 fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
@@ -35,14 +37,14 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
     val lessonHoursRef = useRef<INPUT>()
     div {
         h4 { +"Add lesson:" }
-        //+"Type:"
+        input { ref = lessonNameRef; attrs.placeholder = "Name" }
         select {
             ref = lessonTypeRef
             option {
                 +"Type"
                 attrs.value = "Type"
             }
-            //lesson types are fixed
+            //lesson types are fixed/final
             listOf("Lecture", "Lab", "Practice").map {
                 option {
                     attrs.value = it
@@ -50,31 +52,22 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
                 }
             }
         }
-        input { ref = lessonNameRef; attrs.placeholder = "Name" }
-        input { ref = lessonHoursRef; attrs.placeholder = "Hours total (semester)" }
+        input { ref = lessonHoursRef; attrs.placeholder = "Hours total (semester)"; attrs.type = InputType.number }
         button {
             +"+"
             attrs.onClickFunction = {
-                lessonTypeRef.current?.value?.let { t ->
-                    if (t == "Type")
-                        window.alert("<Add lesson>: select lesson type!")
-                    else
-                        lessonNameRef.current?.value?.let { n ->
-                            if (n.isBlank())
-                                window.alert("<Add lesson>: 'Name' field must not be empty!")
-                            else
-                                lessonHoursRef.current?.value?.let { h ->
-                                    //try converting value to Int
-                                    val hToInt: Int? = h.toIntOrNull()
-                                    //if null -> create browser alert with informative message
-                                    if (hToInt == null)
-                                        window.alert("<Add lesson>: " +
-                                                "'Hours total (semester)' field must be a number!")
-                                    //else -> create lesson empty of students
-                                    else
-                                        props.addLesson(n, t, hToInt)
-                                }
-                        }
+                lessonNameRef.current?.value?.let { n ->
+                    if (n.isBlank())
+                        window.alert("<Add lesson>: 'Name' field must not be empty!")
+                    else {
+                        val selType = lessonTypeRef.current.unsafeCast<SelectedElement>()
+                        if (selType.value == "Type" || selType.value == "" || selType.value == " ")
+                            window.alert("<Add lesson>: select lesson type!")
+                        else
+                            lessonHoursRef.current?.value?.let { h ->
+                                props.addLesson(n, selType.value, h.toInt())
+                            }
+                    }
                 }
             }
         }
@@ -82,11 +75,23 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
 
     h3 { +"Lessons" }
     ol {
-        props.lessons.sortedBy { it.elem.name }.map {
+        props.lessons.sortedBy { it.elem.name }.mapIndexed { i, l ->
             li {
                 Link {
-                    attrs.to = "/lessons/${it.uuid}/details"
-                    +"${it.elem.name} (${it.elem.type})"
+                    attrs.to = "/lessons/${l.uuid}/details"
+                    +"${l.elem.name} (${l.elem.type})"
+                }
+                +"⠀"
+                button {
+                    +"rm"
+                    attrs.onClickFunction = {
+                        //failsafe:
+                        if (props.lessons.size == 1)
+                            window.alert("<Remove lesson>: " +
+                                    "unable to delete last lesson in the list.")
+                        else
+                            props.rmLesson(i)
+                    }
                 }
             }
         }
@@ -109,7 +114,20 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
         },
         options = jso {
             onSuccess = { _: Any, _: Any, _: Any? ->
-                queryClient.invalidateQueries<Any>("lessonList")
+                queryClient.invalidateQueries<Any>("lessonsList")
+            }
+        }
+    )
+
+    val rmLessonMutation = useMutation<Any, Any, Item<Lesson>, Any>({ l ->
+        axios<String>(jso {
+            url = "$lessonsURL/${l.uuid}"
+            method = "Delete"
+        })
+    },
+        options = jso {
+            onSuccess = { _: Any, _: Any, _: Any? ->
+                queryClient.invalidateQueries<Any>("lessonsList")
             }
         }
     )
@@ -122,6 +140,9 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
             attrs.lessons = lessons
             attrs.addLesson = { n, t, h ->
                 addLessonMutation.mutate(Lesson(n, t, h), null)
+            }
+            attrs.rmLesson = {
+                rmLessonMutation.mutate(lessons[it], null)
             }
         }
     }
