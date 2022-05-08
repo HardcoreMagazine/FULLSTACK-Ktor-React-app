@@ -12,9 +12,7 @@ import kotlinx.serialization.json.Json
 import org.w3c.dom.events.Event
 import react.*
 import react.dom.*
-import react.query.useMutation
-import react.query.useQuery
-import react.query.useQueryClient
+import react.query.*
 import react.router.useParams
 import server.model.*
 import wrappers.QueryError

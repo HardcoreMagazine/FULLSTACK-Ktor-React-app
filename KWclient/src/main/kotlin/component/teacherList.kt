@@ -100,7 +100,6 @@ class ClientItemTeacher(
 
 fun fcContainerTeacherList() = fc("QueryTeacherList") { _: Props ->
     val queryClient = useQueryClient()
-
     val queryTeachers = useQuery<String, QueryError, String, String>(
         "teachersList", { fetchText(Config.teachersURL) })
 
@@ -124,7 +123,6 @@ fun fcContainerTeacherList() = fc("QueryTeacherList") { _: Props ->
     else if (queryTeachers.isError)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
-        //val teachers = queryTeachers.data?.data?.toList() ?: emptyList()
         val teachers: List<ClientItemTeacher> = Json.decodeFromString(queryTeachers.data?:"")
         child(fcTeacherList()) {
             attrs.teachers = teachers.toSet()

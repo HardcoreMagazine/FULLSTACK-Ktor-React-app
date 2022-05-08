@@ -31,7 +31,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
     implementation(npm("cross-fetch", "3.1.5"))
     implementation(npm("axios", "0.24.0"))
-    //implementation(npm("react-query-devtools", "2.6.3")) //questionable
 }
 kotlin {
     js(LEGACY) {
@@ -55,5 +54,9 @@ tasks.register<Copy>("copyBuildToBuild") {
 }
 tasks.named("build") { finalizedBy("copyBuild") }
 tasks.named("build") { finalizedBy("copyBuildToBuild") }
+//by default project uses Production version of React
+//in order to enable development version
+//use: Gradle -> %PROJECT_NAME% -> Tasks
+// -> kotlin browser -> browserDevelopmentWebpack
 tasks.named("browserDevelopmentWebpack") { finalizedBy("copyBuild") }
 tasks.named("browserDevelopmentWebpack") { finalizedBy("copyBuildToBuild") }
