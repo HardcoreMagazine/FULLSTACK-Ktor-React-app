@@ -133,6 +133,9 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
             }
         }
     )
+    //changing student data will cause loss of all lessons,
+    //however, old student still be in lessons data repository;
+    //see notes in similar query in studentList, teacher components
 
     if (queryStudent.isLoading or queryLessons.isLoading)
         div { +"Loading ..." }

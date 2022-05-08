@@ -39,8 +39,6 @@ class ClientItemGroup(
 ) : Item<String>
 
 fun fcContainerGroupList() = fc("QueryGroupList") { _: Props ->
-/*    val query = useQuery<Any, QueryError, AxiosResponse<Array<Item<String>>>, Any>(
-        "groupList", { axios<Array<String>>(jso { url = Config.groupsURL }) })*/
     val query = useQuery<String, QueryError, String, String>(
         "groupList", { fetchText(Config.groupsURL) })
     if (query.isLoading)
@@ -48,7 +46,6 @@ fun fcContainerGroupList() = fc("QueryGroupList") { _: Props ->
     else if (query.isError)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
-        //val groups = query.data?.data?.toList() ?: emptyList()
         val groups: List<ClientItemGroup> = Json.decodeFromString(query.data?:"")
         child(fcGroupList()) {
             attrs.groups = groups.map { it.elem }

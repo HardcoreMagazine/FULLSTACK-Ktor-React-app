@@ -63,9 +63,6 @@ fun fcContainerGroup() = fc("ContainerGroup") { _: Props ->
     val studentParams = useParams()
     val groupName = studentParams["group"] ?: "Route param error"
 
-/*    val queryGroup = useQuery<String, QueryError, String, String>(
-        "groupStudentList", { fetchText(Config.studentsURL) })*/
-
     val queryGroup = useQuery<String, QueryError, String, String>(
         "groupStudentList", { fetchText(Config.groupsURL + groupName) })
 

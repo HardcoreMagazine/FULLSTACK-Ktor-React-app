@@ -100,11 +100,6 @@ class ClientItemStudent(
 fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
     val queryClient = useQueryClient()
 
-    /*
-    val query = useQuery<Any, QueryError, AxiosResponse<Array<Item<Student>>>, Any>(
-        "studentList", {
-            axios<Array<Student>>(jso { url = studentsURL }) })
-    */
     val query = useQuery<String, QueryError, String, String>(
         "studentList", { fetchText(studentsURL) })
 
@@ -136,13 +131,16 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
             }
         }
     )
+    //removed student will still be inside prescribed lesson,
+    //because, like "remove teacher" in teacherList component,
+    //this query is not meant to work with lessons data repository
+    //(this can be changed anytime on project backend).
 
     if (query.isLoading)
         div { +"Loading ..." }
     else if (query.isError)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
-        //val students = query.data?.data?.toList() ?: emptyList()
         val students: List<ClientItemStudent> = Json.decodeFromString(query.data?:"")
         child(fcStudentList()) {
             attrs.students = students

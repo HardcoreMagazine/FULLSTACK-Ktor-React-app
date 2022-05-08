@@ -38,27 +38,13 @@ external interface LessonProps : Props {
 interface SelectedElement { val value: String }
 
 //serializers for Item<E>
-//required by QUERY to function correctly (see note below)
+//required by QUERY in order to function correctly
 @Serializable
 class ClientItemLesson(
     override val elem: Lesson,
     override val uuid: String,
     override val etag: Long
 ) : Item<Lesson>
-
-/**
- * this level of abstraction:
- * @Serializable
- * class ClientItemE<E>(
- *     override val elem: E,
- *     override val uuid: String,
- *     override val etag: Long
- * ): Item<E>
- * is not going to work;
- * ClientItem requires <E> in order to work,
- * which breaks entire idea of using <ClintItemElement>
- * @see: /kotlinx.serialization.json/ documentation
-**/
 
 fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     val lessonNameRef = useRef<INPUT>()
@@ -116,9 +102,7 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
                 attrs.onClickFunction = {
                     lessonNameRef.current?.value?.let { lessonName ->
                         val selType = lessonTypeRef.current.unsafeCast<SelectedElement>()
-                        //selection is never empty
                         if (selType.value == "" || selType.value == " ")
-                            //gonna check value regardless...
                             window.alert("<Update lesson>: 'Type' field must not be empty!")
                         else
                             lessonHoursRef.current?.value?.let { lessonHours ->

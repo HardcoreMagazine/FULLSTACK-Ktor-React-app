@@ -1,6 +1,7 @@
 package component
 
 import kotlinext.js.jso
+import kotlinx.browser.window
 import kotlinx.html.INPUT
 import kotlinx.html.InputType
 import kotlinx.html.SELECT
@@ -25,7 +26,7 @@ external interface TeacherProps : Props {
     var lessons: List<Item<Lesson>>
     var updateTeacher: (String, String, Int, Int, String) -> Unit
     var addLesson: (String) -> Unit
-    var rmLesson: (Int) -> Unit
+    var rmLesson: (String) -> Unit
 }
 
 fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
@@ -35,6 +36,7 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
     val lastQualRef = useRef<INPUT>()
     val govNumberRef = useRef<INPUT>()
     val lessonSelectAddRef = useRef<SELECT>()
+    val lessonSelectRmRef = useRef<SELECT>()
 
     val (firstname, setFirstname) = useState(p.teacher.elem.firstname)
     val (surname, setSurname) = useState(p.teacher.elem.surname)
@@ -89,26 +91,26 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
                 attrs.value = govNumber
                 attrs.onChangeFunction = changeOnEdit(setGovNumber, govNumberRef)
             }
-        }
-        button {
-            +"Update profile"
-            attrs.onClickFunction = {
-                firstnameRef.current?.value?.let { fn ->
-                    surnameRef.current?.value?.let { sn ->
-                        salaryRef.current?.value?.let { sl ->
-                            val slToInt = sl.toIntOrNull()
-                            if (slToInt == null)
-                                kotlinx.browser.window.alert("<Profile editor>: " +
-                                        "'salary' field must be a number!")
-                            else {
-                                lastQualRef.current?.value?.let { lq ->
-                                    val lqToInt = lq.toIntOrNull()
-                                    if (lqToInt == null)
-                                        kotlinx.browser.window.alert("<Profile editor>: " +
-                                                "'Last re-qualification (year)' field must be a number!")
-                                    else {
-                                        govNumberRef.current?.value?.let { gn ->
-                                            p.updateTeacher(fn, sn, slToInt, lqToInt, gn)
+            button {
+                +"Update profile"
+                attrs.onClickFunction = {
+                    firstnameRef.current?.value?.let { fn ->
+                        surnameRef.current?.value?.let { sn ->
+                            salaryRef.current?.value?.let { sl ->
+                                val slToInt = sl.toIntOrNull()
+                                if (slToInt == null)
+                                    window.alert("<Profile editor>: " +
+                                            "'salary' field must be a number!")
+                                else {
+                                    lastQualRef.current?.value?.let { lq ->
+                                        val lqToInt = lq.toIntOrNull()
+                                        if (lqToInt == null)
+                                            window.alert("<Profile editor>: " +
+                                                    "'Last re-qualification (year)' field must be a number!")
+                                        else {
+                                            govNumberRef.current?.value?.let { gn ->
+                                                p.updateTeacher(fn, sn, slToInt, lqToInt, gn)
+                                            }
                                         }
                                     }
                                 }
@@ -120,26 +122,54 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
         }
     }
     div {
-        h4 { +"Add lesson: " }
-        select {
-            ref = lessonSelectAddRef
-            p.lessons.filterNot {
-                it.elem.teachers.toString().contains(p.teacher.elem.shortID)
-            }.map {
-                option {
-                    attrs.value = it.uuid
-                    +"${it.elem.name} (${it.elem.type})"
+        p {
+            +"Add lesson: "
+            select {
+                ref = lessonSelectAddRef
+                p.lessons.filterNot {
+                    it.elem.teachers.toString().contains(p.teacher.elem.shortID)
+                }.map {
+                    option {
+                        attrs.value = it.uuid
+                        +"${it.elem.name} (${it.elem.type})"
+                    }
+                }
+            }
+            button {
+                +"+"
+                attrs.onClickFunction = {
+                    val select = lessonSelectAddRef.current.unsafeCast<SelectedElement>()
+                    if (select.value != "" && select.value != " ")
+                        p.addLesson(select.value)
+                    else
+                        window.alert("<Add lesson>: Empty values are not allowed.")
                 }
             }
         }
-        button {
-            +"+"
-            attrs.onClickFunction = {
-                val select = lessonSelectAddRef.current.unsafeCast<SelectedElement>()
-                if (select.value != "" && select.value != " ")
-                    p.addLesson(select.value)
-                else
-                    kotlinx.browser.window.alert("<Add lesson>: Empty values are not allowed.")
+    }
+    div {
+        p {
+            +"Remove lesson: "
+            select {
+                ref = lessonSelectRmRef
+                p.lessons.filter {
+                    it.elem.teachers.toString().contains(p.teacher.elem.shortID)
+                }.map {
+                    option {
+                        attrs.value = it.uuid
+                        +"${it.elem.name} (${it.elem.type})"
+                    }
+                }
+            }
+            button {
+                +"rm"
+                attrs.onClickFunction = {
+                    val select = lessonSelectRmRef.current.unsafeCast<SelectedElement>()
+                    if (select.value != "" && select.value != " ")
+                        p.rmLesson(select.value)
+                    else
+                        window.alert("<Remove lesson>: Empty values are not allowed.")
+                }
             }
         }
     }
@@ -151,21 +181,12 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
             if (prescribedLessons.isEmpty())
                 li { +"empty" }
             else {
-                prescribedLessons.mapIndexed { i, l ->
+                prescribedLessons.map {
                     li {
                         a {
-                            attrs.href = "http://localhost:8000/#/lessons/${l.uuid}/details"
-                            +"${l.elem.name} (${l.elem.type})"
+                            attrs.href = "http://localhost:8000/#/lessons/${it.uuid}/details"
+                            +"${it.elem.name} (${it.elem.type})"
                         }
-                        +"⠀" //empty symbol/element separator
-                        //TODO:
-                        // this \/ is the actual "page freeze" cause (still don't know why though)
-                        /*
-                        button {
-                            +"rm"
-                            p.rmLesson(i)
-                        }
-                        */
                     }
                 }
             }
@@ -203,7 +224,7 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         }
     )
     //updating teacher name or surname will cause loss of all prescribed lessons
-    //because backend query not meant to update/handle teachers names change
+    //because this query is not meant to update/handle teachers names change
 
     val addLessonMutation = useMutation<Any, Any, String, Any>({ lessonId ->
         axios<String>(jso {
@@ -251,8 +272,8 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
             attrs.addLesson = { lessonId ->
                 addLessonMutation.mutate(lessonId, null)
             }
-            attrs.rmLesson = {
-                rmLessonMutation.mutate(lessons[it].uuid, null)
+            attrs.rmLesson = { lessonId ->
+                rmLessonMutation.mutate(lessonId, null)
             }
         }
     }
