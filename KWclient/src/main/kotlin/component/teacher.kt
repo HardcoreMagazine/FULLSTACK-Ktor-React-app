@@ -1,6 +1,5 @@
 package component
 
-/*
 import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.InputType
@@ -159,10 +158,14 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
                             +"${l.elem.name} (${l.elem.type})"
                         }
                         +"⠀" //empty symbol/element separator
+                        //TODO:
+                        // this \/ is the actual "page freeze" cause (still don't know why though)
+                        /*
                         button {
                             +"rm"
                             p.rmLesson(i)
                         }
+                        */
                     }
                 }
             }
@@ -180,10 +183,8 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
     val teacherParams = useParams()
     val teacherId = teacherParams["id"] ?: "Route param error"
 
-    //causes page to freeze
     val queryLessons = useQuery<String, QueryError, String, String>(
         "lessonsList", { fetchText(Config.lessonsURL ) })
-
     val queryTeacher = useQuery<String, QueryError, String, String>(
         teacherId, { fetchText(Config.teachersURL + teacherId) })
 
@@ -201,6 +202,8 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
             }
         }
     )
+    //updating teacher name or surname will cause loss of all prescribed lessons
+    //because backend query not meant to update/handle teachers names change
 
     val addLessonMutation = useMutation<Any, Any, String, Any>({ lessonId ->
         axios<String>(jso {
@@ -232,18 +235,8 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         }
     )
 
-    */
-/*
     if (queryLessons.isLoading or queryTeacher.isLoading)
         div { +"Loading ..." }
-    else if (queryLessons.isError or queryTeacher.isLoading)
-        div { +"Query error. Please contact server administrator at: admin@adminmail." }
-    *//*
-
-    if (queryLessons.isLoading)
-        div { +"Loading lessons data..." }
-    else if (queryTeacher.isLoading)
-        div { +"Loading teacher data..." }
     else if (queryLessons.isError or queryTeacher.isLoading)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
@@ -264,4 +257,3 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         }
     }
 }
-*/
