@@ -4,7 +4,7 @@ class Config {
     companion object {
         const val serverDomain = "localhost"
         const val serverPort = 8000
-        const val serverApi = "1"
+        const val serverApi = "2"
         const val serverUrl = "http://$serverDomain:$serverPort/"
         const val pathPrefix = "api$serverApi/"
 

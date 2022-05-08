@@ -22,7 +22,7 @@ fun Route.teacher() = route(Config.teachersPath) {
     get("{id}") {
         if (!teachersRepo.isEmpty()) {
             val id = call.parameters["id"]?:return@get call
-                .respondText("Invalid teacher id", status=HttpStatusCode.NotFound)
+                .respondText("Invalid teacher id", status=HttpStatusCode.BadRequest)
             val teacherItem = teachersRepo[id]?:return@get call
                 .respondText("No teachers found with id $id", status=HttpStatusCode.NotFound)
             call.response.etag(teacherItem.etag.toString())

@@ -1,5 +1,6 @@
 package component
 
+/*
 import kotlinext.js.jso
 import kotlinx.html.INPUT
 import kotlinx.html.InputType
@@ -157,11 +158,11 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
                             attrs.href = "http://localhost:8000/#/lessons/${l.uuid}/details"
                             +"${l.elem.name} (${l.elem.type})"
                         }
-                    }
-                    +"⠀" //empty symbol/element separator
-                    button {
-                        +"rm"
-                        p.rmLesson(i)
+                        +"⠀" //empty symbol/element separator
+                        button {
+                            +"rm"
+                            p.rmLesson(i)
+                        }
                     }
                 }
             }
@@ -179,18 +180,12 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
     val teacherParams = useParams()
     val teacherId = teacherParams["id"] ?: "Route param error"
 
-    //TODO: fix teacher lessons query
-    // !!WARNING!!
-    // for unknown reasons teacher lessons query
-    // causes memory leak in JVM
-    // do not open [teachers/:id] page if
-    // you don't want your browser (&&PC) to freeze!
+    //causes page to freeze
     val queryLessons = useQuery<String, QueryError, String, String>(
-        "teacherLessonsList", { fetchText(Config.lessonsURL ) })
+        "lessonsList", { fetchText(Config.lessonsURL ) })
 
     val queryTeacher = useQuery<String, QueryError, String, String>(
         teacherId, { fetchText(Config.teachersURL + teacherId) })
-
 
     val updateTeacherMutation = useMutation<Any, Any, TeacherStates, Any>({ mutationData ->
         axios<String>(jso {
@@ -217,7 +212,7 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         options = jso {
             onSuccess = { _: Any, _: Any, _: Any? ->
                 queryClient.invalidateQueries<Any>(teacherId)
-                queryClient.invalidateQueries<Any>("teacherLessonsList")
+                queryClient.invalidateQueries<Any>("lessonsList")
             }
         }
     )
@@ -232,16 +227,25 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         options = jso {
             onSuccess = { _: Any, _: Any, _: Any? ->
                 queryClient.invalidateQueries<Any>(teacherId)
-                queryClient.invalidateQueries<Any>("teacherLessonsList")
+                queryClient.invalidateQueries<Any>("lessonsList")
             }
         }
     )
 
+    */
+/*
     if (queryLessons.isLoading or queryTeacher.isLoading)
         div { +"Loading ..." }
     else if (queryLessons.isError or queryTeacher.isLoading)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
+    *//*
 
+    if (queryLessons.isLoading)
+        div { +"Loading lessons data..." }
+    else if (queryTeacher.isLoading)
+        div { +"Loading teacher data..." }
+    else if (queryLessons.isError or queryTeacher.isLoading)
+        div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
         val lessons: List<ClientItemLesson> = Json.decodeFromString(queryLessons.data?:"")
         val teacher: ClientItemTeacher = Json.decodeFromString(queryTeacher.data?:"")
@@ -260,3 +264,4 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
         }
     }
 }
+*/
