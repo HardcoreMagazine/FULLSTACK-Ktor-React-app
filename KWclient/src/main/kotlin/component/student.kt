@@ -23,19 +23,19 @@ import wrappers.fetchText
 import kotlin.js.json
 
 external interface StudentProps : Props {
-    var stud: Item<Student>
+    var student: Item<Student>
     var lessons: List<Item<Lesson>>
     var updateStudent: (String, String, String) -> Unit
 }
 
-fun fcStudent() = fc("Student") { props: StudentProps ->
+fun fcStudent() = fc("Student") { p: StudentProps ->
     val firstnameRef = useRef<INPUT>()
     val surnameRef = useRef<INPUT>()
     val groupRef = useRef<INPUT>()
 
-    val (firstname, setFirstname) = useState(props.stud.elem.firstname)
-    val (surname, setSurname) = useState(props.stud.elem.surname)
-    val (group, setGroup) = useState(props.stud.elem.group)
+    val (firstname, setFirstname) = useState(p.student.elem.firstname)
+    val (surname, setSurname) = useState(p.student.elem.surname)
+    val (group, setGroup) = useState(p.student.elem.group)
 
     fun changeOnEdit(setter: StateSetter<String>, ref: MutableRefObject<INPUT>) = { _: Event ->
         setter(ref.current?.value ?: "ERROR!")
@@ -72,7 +72,7 @@ fun fcStudent() = fc("Student") { props: StudentProps ->
                     firstnameRef.current?.value?.let { firstname ->
                         surnameRef.current?.value?.let { surname ->
                             groupRef.current?.value?.let { group ->
-                                props.updateStudent(firstname, surname, group)
+                                p.updateStudent(firstname, surname, group)
                             }
                         }
                     }
@@ -84,7 +84,7 @@ fun fcStudent() = fc("Student") { props: StudentProps ->
         h4 { +"Prescribed lessons:" }
         ul {
             val filteredLessons =
-                props.lessons.filter { it.elem.students.toString().contains(props.stud.elem.fullID) }
+                p.lessons.filter { it.elem.students.toString().contains(p.student.elem.fullID) }
             /**.contains() function is deprecated in JS, there is no alternative to iterate over OBJECT
             -> convert object to string and use RegEx to filter elements out**/
             if (filteredLessons.isEmpty()) li { +"empty" }
@@ -102,29 +102,22 @@ fun fcStudent() = fc("Student") { props: StudentProps ->
     }
 }
 
-private class StudentStates(
-    val oldStudent: Item<Student>,
-    val newStudent: Student
-)
-
 fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
     val queryClient = useQueryClient()
-
     val studentParams = useParams()
     val studentId = studentParams["id"] ?: "Route param error"
 
     val queryStudent = useQuery<String, QueryError, String, String>(
         studentId, { fetchText(Config.studentsURL + studentId) })
-
     val queryLessons = useQuery<String, QueryError, String, String>(
         "lessonList", { fetchText(Config.lessonsURL) })
 
-    val updateStudentMutation = useMutation<Any, Any, StudentStates, Any>({ elem ->
+    val updateStudentMutation = useMutation<Any, Any, Student, Any>({ elem ->
             axios<String>(jso {
-                url = "${Config.studentsURL}/${elem.oldStudent.uuid}"
+                url = "${Config.studentsURL}/$studentId"
                 method = "Put"
                 headers = json("Content-Type" to "application/json",)
-                data = JSON.stringify(elem.newStudent)
+                data = JSON.stringify(elem)
             })
         },
         options = jso {
@@ -135,7 +128,8 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
     )
     //changing student data will cause loss of all lessons,
     //however, old student still be in lessons data repository;
-    //see notes in similar query in studentList, teacher components
+    //(this can be changed anytime on project backend)
+    //see notes in studentList, teacher components (similar queries)
 
     if (queryStudent.isLoading or queryLessons.isLoading)
         div { +"Loading ..." }
@@ -145,10 +139,10 @@ fun fcContainerStudent() = fc("ContainerStudent") { _: Props ->
         val student: ClientItemStudent = Json.decodeFromString(queryStudent.data?:"")
         val lessons: List<ClientItemLesson> = Json.decodeFromString(queryLessons.data?:"")
         child(fcStudent()) {
-            attrs.stud = student
+            attrs.student = student
             attrs.lessons = lessons
             attrs.updateStudent = { fn, sn, g ->
-                updateStudentMutation.mutate(StudentStates(student, Student(fn, sn, g)), null)
+                updateStudentMutation.mutate(Student(fn, sn, g), null)
             }
         }
     }

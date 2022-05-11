@@ -61,7 +61,7 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
                         window.alert("<Add lesson>: 'Name' field must not be empty!")
                     else {
                         val selType = lessonTypeRef.current.unsafeCast<SelectedElement>()
-                        if (selType.value == "Type" || selType.value == "" || selType.value == " ")
+                        if (selType.value == "Type" || selType.value.isBlank())
                             window.alert("<Add lesson>: select lesson type!")
                         else
                             lessonHoursRef.current?.value?.let { h ->
@@ -101,7 +101,7 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
 fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
     val queryClient = useQueryClient()
 
-    val query = useQuery<String, QueryError, String, String>(
+    val queryLessons = useQuery<String, QueryError, String, String>(
         "lessonsList", { fetchText(lessonsURL) })
 
     val addLessonMutation = useMutation<Any, Any, Lesson, Any>({ l ->
@@ -132,10 +132,12 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
         }
     )
 
-    if (query.isLoading) div { +"Loading .." }
-    else if (query.isError) div { +"Error!" }
+    if (queryLessons.isLoading)
+        div { +"Loading .." }
+    else if (queryLessons.isError)
+        div { +"Error!" }
     else {
-        val lessons: List<ClientItemLesson> = Json.decodeFromString(query.data?:"")
+        val lessons: List<ClientItemLesson> = Json.decodeFromString(queryLessons.data?:"")
         child(fcLessonList()) {
             attrs.lessons = lessons
             attrs.addLesson = { n, t, h ->

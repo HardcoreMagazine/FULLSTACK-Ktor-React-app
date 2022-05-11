@@ -91,6 +91,7 @@ fun fcTeacherList() = fc("TeacherList") { p: TeacherListProps ->
     }
 }
 
+//see explanation in file "lesson.kt" (package 'component')
 @Serializable
 class ClientItemTeacher(
     override val elem: Teacher,

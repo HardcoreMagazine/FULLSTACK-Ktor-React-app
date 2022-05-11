@@ -65,7 +65,6 @@ fun fcContainerGroup() = fc("ContainerGroup") { _: Props ->
 
     val queryGroup = useQuery<String, QueryError, String, String>(
         "groupStudentList", { fetchText(Config.groupsURL + groupName) })
-
     val queryLessons = useQuery<String, QueryError, String, String>(
         "groupLessonsList", { fetchText(Config.lessonsURL) })
 

@@ -62,8 +62,10 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
             li {
                 val student =
                     Student(studentItem.elem.firstname, studentItem.elem.surname, studentItem.elem.group)
-                //required in order to access 'get' fields; otherwise all fields must be accessed directly, i.e.:
-                //"${studentItem.elem.firstname} ${studentItem.elem.surname}" -- .fullID, .shortID not going to work
+                //required in order to access 'get' fields;
+                // otherwise all fields must be accessed directly, i.e.:
+                //"${studentItem.elem.firstname} ${studentItem.elem.surname}"
+                // -- .fullID, .shortID not going to work
                 Link {
                     +student.shortID
                     attrs.to = "/students/${studentItem.uuid}"
@@ -90,6 +92,7 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
     }
 }
 
+//see explanation in file "lesson.kt" (package 'component')
 @Serializable
 class ClientItemStudent(
     override val elem: Student,
@@ -100,9 +103,8 @@ class ClientItemStudent(
 fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
     val queryClient = useQueryClient()
 
-    val query = useQuery<String, QueryError, String, String>(
+    val queryStudents = useQuery<String, QueryError, String, String>(
         "studentList", { fetchText(studentsURL) })
-
 
     val addStudentMutation = useMutation<Any, Any, Any, Any>({ student: Student ->
             axios<String>(jso {
@@ -134,14 +136,14 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
     //removed student will still be inside prescribed lesson,
     //because, like "remove teacher" in teacherList component,
     //this query is not meant to work with lessons data repository
-    //(this can be changed anytime on project backend).
+    //(this can be changed anytime on project backend)
 
-    if (query.isLoading)
+    if (queryStudents.isLoading)
         div { +"Loading ..." }
-    else if (query.isError)
+    else if (queryStudents.isError)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
-        val students: List<ClientItemStudent> = Json.decodeFromString(query.data?:"")
+        val students: List<ClientItemStudent> = Json.decodeFromString(queryStudents.data?:"")
         child(fcStudentList()) {
             attrs.students = students
             attrs.addStudent = { fn, sn, g ->

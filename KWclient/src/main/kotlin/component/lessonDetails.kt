@@ -6,7 +6,7 @@ import react.fc
 
 external interface LessonDetailsProps : Props {
     var teachers: List<Pair<String, String>> //<name, id>
-    var students: List<Triple<String, String, String>> //name, group, id
+    var students: List<Triple<String, String, String>> //<name, group, id>
 }
 
 fun fcLessonDetails() = fc("LessonDetails") { p: LessonDetailsProps ->

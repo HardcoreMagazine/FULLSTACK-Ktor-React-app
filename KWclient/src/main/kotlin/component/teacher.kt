@@ -194,11 +194,6 @@ fun fcTeacher() = fc("Teacher") { p: TeacherProps ->
     }
 }
 
-private class TeacherStates(
-    val oldTeacher: Item<Teacher>,
-    val newTeacher: Teacher
-)
-
 fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
     val queryClient = useQueryClient()
     val teacherParams = useParams()
@@ -209,12 +204,12 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
     val queryTeacher = useQuery<String, QueryError, String, String>(
         teacherId, { fetchText(Config.teachersURL + teacherId) })
 
-    val updateTeacherMutation = useMutation<Any, Any, TeacherStates, Any>({ mutationData ->
+    val updateTeacherMutation = useMutation<Any, Any, Teacher, Any>({ elem ->
         axios<String>(jso {
-            url = "${Config.teachersURL}/${mutationData.oldTeacher.uuid}"
+            url = "${Config.teachersURL}/$teacherId"
             method = "Put"
             headers = json("Content-Type" to "application/json")
-            data = Json.encodeToString(mutationData.newTeacher)
+            data = Json.encodeToString(elem)
         })
     },
         options = jso {
@@ -267,7 +262,7 @@ fun fcContainerTeacher() = fc("ContainerTeacher") { _: Props ->
             attrs.teacher = teacher
             attrs.lessons = lessons
             attrs.updateTeacher = { fn, sn, sl, lq, gn ->
-                updateTeacherMutation.mutate(TeacherStates(teacher, Teacher(fn, sn, sl, lq, gn)), null)
+                updateTeacherMutation.mutate(Teacher(fn, sn, sl, lq, gn), null)
             }
             attrs.addLesson = { lessonId ->
                 addLessonMutation.mutate(lessonId, null)

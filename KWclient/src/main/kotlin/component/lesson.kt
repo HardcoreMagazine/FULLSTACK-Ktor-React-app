@@ -1,6 +1,5 @@
 package component
 
-
 import kotlinext.js.jso
 import kotlinx.browser.window
 import kotlinx.html.INPUT
@@ -38,13 +37,15 @@ external interface LessonProps : Props {
 interface SelectedElement { val value: String }
 
 //serializers for Item<E>
-//required by QUERY in order to function correctly
+//why? --by default Item<E> is not serializable
+//means you can't decode it directly
 @Serializable
 class ClientItemLesson(
     override val elem: Lesson,
     override val uuid: String,
     override val etag: Long
 ) : Item<Lesson>
+//so we have to use this ^
 
 fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     val lessonNameRef = useRef<INPUT>()
@@ -56,8 +57,9 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     val studentSelectAddRef = useRef<SELECT>()
     val studentSelectRmRef = useRef<SELECT>()
 
+    //by default INPUT fields are read-only, state hooks allow text editing
     val (name, setName) = useState(lp.lesson.elem.name)
-    //type reference require separate/additional function (not included in current version)
+    //'Type' reference require separate/additional function (not included in current version)
     val (hours, setHours) = useState(lp.lesson.elem.totalHours.toString())
 
     fun changeOnEdit(setter: StateSetter<String>, ref: MutableRefObject<INPUT>) = { _: Event ->
@@ -102,7 +104,7 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
                 attrs.onClickFunction = {
                     lessonNameRef.current?.value?.let { lessonName ->
                         val selType = lessonTypeRef.current.unsafeCast<SelectedElement>()
-                        if (selType.value == "" || selType.value == " ")
+                        if (selType.value.isBlank())
                             window.alert("<Update lesson>: 'Type' field must not be empty!")
                         else
                             lessonHoursRef.current?.value?.let { lessonHours ->
@@ -232,11 +234,6 @@ fun fcLesson() = fc("Lesson") { lp: LessonProps ->
     }
 }
 
-private class LessonStates(
-    val oldLesson: Item<Lesson>,
-    val newLesson: Lesson
-)
-
 fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
     val queryClient = useQueryClient()
     val lessonParams = useParams()
@@ -249,13 +246,12 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
     val queryTeachers = useQuery<String, QueryError, String, String>(
         "teachersList", { fetchText(Config.teachersURL) })
 
-    val updateLessonMutation = useMutation<Any, Any, LessonStates, Any>({ elem ->
-        //<name, type, hours>
+    val updateLessonMutation = useMutation<Any, Any, Lesson, Any>({ elem ->
         axios<String>(jso {
-            url = "${Config.lessonsURL}/${elem.oldLesson.uuid}"
+            url = "${Config.lessonsURL}/$lessonId"
             method = "Put"
             headers = json("Content-Type" to "application/json")
-            data = Json.encodeToString(elem.newLesson)
+            data = Json.encodeToString(elem)
         })
     },
         options = jso {
@@ -335,7 +331,7 @@ fun fcContainerLesson() = fc("ContainerLesson") { _: Props ->
             attrs.students = studentItems
             attrs.teachers = teacherItems
             attrs.updateLesson = { n, t, h ->
-                updateLessonMutation.mutate(LessonStates(lessonItem, Lesson(n, t, h)), null)
+                updateLessonMutation.mutate( Lesson(n, t, h), null)
             }
             attrs.addTeacher = {
                 addTeacherMutation.mutate(it, null)

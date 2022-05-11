@@ -31,6 +31,7 @@ fun fcGroupList() = fc("GroupList") { props: GroupListProps ->
     }
 }
 
+//see explanation in file "lesson.kt" (package 'component')
 @Serializable
 class ClientItemGroup(
     override val elem: String,
@@ -39,14 +40,14 @@ class ClientItemGroup(
 ) : Item<String>
 
 fun fcContainerGroupList() = fc("QueryGroupList") { _: Props ->
-    val query = useQuery<String, QueryError, String, String>(
+    val queryGroups = useQuery<String, QueryError, String, String>(
         "groupList", { fetchText(Config.groupsURL) })
-    if (query.isLoading)
+    if (queryGroups.isLoading)
         div { +"Loading ..." }
-    else if (query.isError)
+    else if (queryGroups.isError)
         div { +"Query error. Please contact server administrator at: admin@adminmail." }
     else {
-        val groups: List<ClientItemGroup> = Json.decodeFromString(query.data?:"")
+        val groups: List<ClientItemGroup> = Json.decodeFromString(queryGroups.data?:"")
         child(fcGroupList()) {
             attrs.groups = groups.map { it.elem }
         }
