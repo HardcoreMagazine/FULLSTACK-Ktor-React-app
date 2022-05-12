@@ -1,7 +1,6 @@
 import component.*
 import kotlinx.browser.document
 import react.createElement
-//import react.dom.br
 import react.dom.render
 import react.query.QueryClient
 import react.query.QueryClientProvider
@@ -43,7 +42,6 @@ fun main() {
                     +"Lessons"
                 }
                 Routes {
-                    /**----------------------STUDENTS---------------------**/
                     Route {
                         attrs.index = true
                         attrs.path = "/students"
@@ -53,7 +51,6 @@ fun main() {
                         attrs.path = "/students/:id"
                         attrs.element = createElement(fcContainerStudent())
                     }
-                    /**----------------------GROUPS-----------------------**/
                     Route {
                         attrs.index = true
                         attrs.path = "/groups"
@@ -63,7 +60,6 @@ fun main() {
                         attrs.path = "/groups/:group"
                         attrs.element = createElement(fcContainerGroup())
                     }
-                    /**----------------------TEACHERS---------------------**/
                     Route {
                         attrs.index = true
                         attrs.path = "/teachers"
@@ -73,7 +69,6 @@ fun main() {
                         attrs.path = "/teachers/:id"
                         attrs.element = createElement(fcContainerTeacher())
                     }
-                    /**----------------------LESSONS----------------------**/
                     Route {
                         attrs.index = true
                         attrs.path = "/lessons"
@@ -85,6 +80,8 @@ fun main() {
                     }
                 }
                 child(cReactQueryDevtools()) {}
+                //disabled in React production build
+                //see notes in "/wrappers/react-query-devtools.kt"
             }
         }
     }

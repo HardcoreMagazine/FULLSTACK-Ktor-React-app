@@ -3,7 +3,6 @@ package server.repo
 import server.model.Item
 
 interface Repo<E> {
-
     operator fun get(uuid: String): Item<E>?
     fun find(predicate: (E) -> Boolean): List<Item<E>>
     fun findAll(): List<Item<E>>

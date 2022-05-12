@@ -31,13 +31,12 @@ class ListRepo<E> : Repo<E> {
         if (list.containsKey(uuid)) {
             list[uuid] = value to currentTimeMillis()
             true
-        } else false
+        }
+        else false
 
     override fun delete(uuid: String): Boolean =
         list.remove(uuid) != null
 
-
     override fun isEmpty(): Boolean =
         list.isEmpty()
-
 }

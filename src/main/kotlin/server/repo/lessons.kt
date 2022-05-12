@@ -11,9 +11,6 @@ val basicLessonsData = listOf(
     Lesson("Programming", "Lab", 172)
 )
 
-//4 lessons [0-3]
-//13 students [0-12]
-//5 teachers [0-4]
 val studentSets = listOf(
     studentsRepoTestData.filter { it.group == "29m" }.map { it.fullID }.toSet(),
     studentsRepoTestData.filter { it.group == "29z" }.map { it.fullID }.toSet(),
@@ -26,7 +23,7 @@ val lessonsRepoTestData = basicLessonsData.mapIndexed { i, l ->
         l.name,
         l.type,
         l.totalHours,
-        setOf(teachersRepoTestData[i].shortID), //[0..3]
+        setOf(teachersRepoTestData[i].shortID),
         studentSets[i]
     )
 }

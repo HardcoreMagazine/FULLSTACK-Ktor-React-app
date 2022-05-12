@@ -25,7 +25,7 @@ fun main() {
 }
 
 fun Application.main(isInDevelopment: Boolean = true) {
-    if(isInDevelopment) { //fills repositories with test data
+    if(isInDevelopment) { //fills repositories with data samples
         //students
         studentsRepoTestData.forEach { studentsRepo.create(it) }
         //students groups
