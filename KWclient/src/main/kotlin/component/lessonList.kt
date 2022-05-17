@@ -28,7 +28,7 @@ import kotlin.js.json
 external interface LessonListProps : Props {
     var lessons: List<Item<Lesson>>
     var addLesson: (String, String, Int) -> Unit
-    var rmLesson: (Int) -> Unit
+    var rmLesson: (String) -> Unit
 }
 
 fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
@@ -75,11 +75,11 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
 
     h3 { +"Lessons" }
     ol {
-        props.lessons.sortedBy { it.elem.name }.mapIndexed { i, l ->
+        props.lessons.sortedBy { it.elem.name }.map { lessonItem ->
             li {
                 Link {
-                    attrs.to = "/lessons/${l.uuid}/details"
-                    +"${l.elem.name} (${l.elem.type})"
+                    attrs.to = "/lessons/${lessonItem.uuid}/details"
+                    +"${lessonItem.elem.name} (${lessonItem.elem.type})"
                 }
                 +"⠀"
                 button {
@@ -90,7 +90,7 @@ fun fcLessonList() = fc("LessonList") { props: LessonListProps ->
                             window.alert("<Remove lesson>: " +
                                     "unable to delete last lesson in the list.")
                         else
-                            props.rmLesson(i)
+                            props.rmLesson(lessonItem.uuid)
                     }
                 }
             }
@@ -143,8 +143,8 @@ fun fcContainerLessonList() = fc("LessonListContainer") { _: Props ->
             attrs.addLesson = { n, t, h ->
                 addLessonMutation.mutate(Lesson(n, t, h), null)
             }
-            attrs.rmLesson = {
-                rmLessonMutation.mutate(lessons[it], null)
+            attrs.rmLesson = { id ->
+                rmLessonMutation.mutate(lessons.find { it.uuid == id }!!, null)
             }
         }
     }

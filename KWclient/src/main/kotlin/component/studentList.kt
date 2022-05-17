@@ -26,7 +26,7 @@ import kotlin.js.json
 external interface StudentListProps : Props {
     var students: List<Item<Student>>
     var addStudent: (String, String, String) -> Unit
-    var rmStudent: (Int) -> Unit
+    var rmStudent: (String) -> Unit
 }
 
 fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
@@ -58,7 +58,7 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
 
     h3 { +"Students" }
     ol {
-        props.students.sortedByDescending { it.elem.group }.mapIndexed { index, studentItem ->
+        props.students.sortedByDescending { it.elem.group }.map { studentItem ->
             li {
                 val student =
                     Student(studentItem.elem.firstname, studentItem.elem.surname, studentItem.elem.group)
@@ -84,7 +84,7 @@ fun fcStudentList() = fc("StudentList") { props: StudentListProps ->
                             window.alert("<Remove student>: " +
                                     "unable to delete last student in the list.")
                         else
-                            props.rmStudent(index)
+                            props.rmStudent(studentItem.uuid)
                     }
                 }
             }
@@ -149,8 +149,8 @@ fun fcContainerStudentList() = fc("QueryStudentList") { _: Props ->
             attrs.addStudent = { fn, sn, g ->
                 addStudentMutation.mutate(Student(fn, sn, g), null)
             }
-            attrs.rmStudent = {
-                rmStudentMutation.mutate(students[it], null)
+            attrs.rmStudent = { id ->
+                rmStudentMutation.mutate(students.find { it.uuid == id }!!, null)
             }
         }
     }
