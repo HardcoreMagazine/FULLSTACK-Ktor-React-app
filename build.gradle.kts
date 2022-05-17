@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     implementation("KW:KWmodel-jvm-1.0") //local repo
+    implementation("KW:KWmodel-js-1.0")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-serialization:$ktor_version")
     implementation("io.ktor:ktor-server-sessions:$ktor_version")
