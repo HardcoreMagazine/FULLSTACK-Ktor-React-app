@@ -1,5 +1,5 @@
 # FULLSTACK Ktor&React multipage application
-My Y3 uni coursework
+My Y3 uni coursework. Ignore this.
 
 ## Project structure:
 ```
